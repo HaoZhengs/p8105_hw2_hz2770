@@ -5,4 +5,134 @@ date: "2021/10/9"
 output: github_document
 ---
 
+```{r}
+library(tidyverse)
+library(readxl)
+
+# get the path of the dataset.
+getwd()
+```
+
+# Problem 1
+```{r}
+# Read and clean the Mr.Trash Wheel sheet
+mr_trash_wheel_data = 
+  read_excel("./data/Trash-Wheel-Collection-Totals-7-2020-2.xlsx",
+             sheet = "Mr. Trash Wheel",
+             range = cell_cols("A2:N534")) %>% 
+  janitor::clean_names() %>%
+  drop_na(dumpster) %>% 
+  mutate(sports_balls = round(sports_balls, digits = 0))
+```
+
+
+```{r}
+# Read and clean precipitation data for 2018 and 2019
+precipitation_data_2018 =
+  read_excel(
+    "./data/Trash-Wheel-Collection-Totals-7-2020-2.xlsx",
+    sheet = "2018 Precipitation",
+    skip = 1
+    ) %>% 
+  janitor::clean_names() %>% 
+  drop_na(month) %>% 
+  drop_na(total) %>% 
+  mutate(year = "2018")
+```
+
+```{r}
+precipitation_data_2019=
+  read_excel(
+    "./data/Trash-Wheel-Collection-Totals-7-2020-2.xlsx",
+    sheet = "2019 Precipitation",
+    skip = 1
+    ) %>% 
+  janitor::clean_names() %>% 
+  drop_na(month) %>% 
+  drop_na(total) %>% 
+  mutate(year = "2019")
+```
+
+
+```{r}
+# Then combine the two dataset
+precipitation_data = 
+  bind_rows(precipitation_data_2018, precipitation_data_2019) %>% 
+  mutate(month = month.name[month]) %>% 
+  relocate(year)
+```
+
+## 
+
+
+# Problem 2
+
+```{r}
+# clean the data in pols-month.csv
+pols_month = read_csv(
+  "./fivethirtyeight_datasets/pols-month.csv"
+) %>%
+  separate(mon,c("year","month","day")) %>%
+  mutate(year = as.integer(year),
+         month = as.integer(month),
+         day = as.integer(day)) %>% 
+  mutate(month = month.name[month]) %>% 
+  mutate(prez_gop = na_if(prez_gop,2)) %>% 
+  drop_na(prez_gop) %>% 
+  mutate(president = ifelse(prez_gop == 1, "gop", "dem")) %>% 
+  select(-prez_gop, -prez_dem, -day)
+
+pols_month
+```
+
+## Second, clean the data in snp.csv using a similar process
+```{r}
+snp_data = read_csv(
+  "./fivethirtyeight_datasets/snp.csv"
+) %>%
+  separate(date,c("month","day","year")) %>%
+  mutate(year = as.integer(year) + 2000) %>% 
+  mutate(year = ifelse(year >= "2020", year - 100, year)) %>% 
+  mutate(month = as.integer(month)) %>%
+  arrange(year,month) %>% 
+  mutate(month = month.name[month]) %>% 
+  relocate(year, month) %>% 
+  select(-day)
+
+snp_data
+```
+
+## Now let's clean the unemployment data.
+```{r}
+unemployment_df = read_csv(
+  "./fivethirtyeight_datasets/unemployment.csv"
+)
+unemployment_data = 
+  pivot_longer(
+    unemployment_df,
+    Jan:Dec,
+    names_to = "month",
+    values_to = "perc_unemployment"
+) %>% 
+  janitor::clean_names() %>% 
+  mutate(month = match(month,month.abb)) %>% 
+  mutate(month = month.name[month])
+
+unemployment_data
+```
+
+## Join the dataset
+```{r}
+pols_snp_data = 
+  left_join(pols_month, snp_data, by = c("year","month"))
+
+pols_snp_unem_data = left_join(pols_month, unemployment_data, by = c("year","month"))
+```
+
+
+# Problem 3
+
+```{r}
+
+```
 
