@@ -127,7 +127,10 @@ pols_snp_data =
   left_join(pols_month, snp_data, by = c("year","month"))
 
 pols_snp_unem_data = left_join(pols_month, unemployment_data, by = c("year","month"))
+
+pols_snp_unem_data
 ```
+The resulting dataset is a `817 * 10` dataset, with the data in the above three datasets.
 
 
 ## Problem 3
