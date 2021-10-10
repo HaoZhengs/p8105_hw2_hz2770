@@ -13,7 +13,7 @@ library(readxl)
 getwd()
 ```
 
-# Problem 1
+## Problem 1
 ```{r}
 # Read and clean the Mr.Trash Wheel sheet
 mr_trash_wheel_data = 
@@ -65,7 +65,7 @@ precipitation_data =
 ## 
 
 
-# Problem 2
+## Problem 2
 
 ```{r}
 # clean the data in pols-month.csv
@@ -85,7 +85,7 @@ pols_month = read_csv(
 pols_month
 ```
 
-## Second, clean the data in snp.csv using a similar process
+Second, clean the data in snp.csv using a similar process
 ```{r}
 snp_data = read_csv(
   "./fivethirtyeight_datasets/snp.csv"
@@ -102,7 +102,7 @@ snp_data = read_csv(
 snp_data
 ```
 
-## Now let's clean the unemployment data.
+Now let's clean the unemployment data.
 ```{r}
 unemployment_df = read_csv(
   "./fivethirtyeight_datasets/unemployment.csv"
@@ -121,7 +121,7 @@ unemployment_data =
 unemployment_data
 ```
 
-## Join the dataset
+Join the dataset
 ```{r}
 pols_snp_data = 
   left_join(pols_month, snp_data, by = c("year","month"))
@@ -130,9 +130,62 @@ pols_snp_unem_data = left_join(pols_month, unemployment_data, by = c("year","mon
 ```
 
 
-# Problem 3
+## Problem 3
+
+First, clean the dataset.
+```{r}
+pop_baby_names = 
+   read_csv("./data/Popular_Baby_Names.csv") %>% 
+   janitor::clean_names() %>% 
+# clean all the cases in dataset and moderate the ethnicity
+   mutate(gender = tolower(gender),
+          ethnicity = gsub(" ", "_", ethnicity),
+          ethnicity = tolower(ethnicity),
+          childs_first_name = str_to_title(childs_first_name)) %>% 
+   mutate(ethnicity = recode(ethnicity, "asian_and_pacific_islander" = "asian_and_pacific", "white_non_hispanic" = "white_non_hisp", "black_non_hispanic" = "black_non_hisp")) %>%
+#delete duplicate rows
+  distinct()
+
+pop_baby_names
+```
+
+
+Produce a table showing the rank in popularity of the name “Olivia” as a female baby name over time.
+```{r}
+Olivia_df = 
+  pop_baby_names %>% 
+  filter(childs_first_name == "Olivia") %>% 
+  filter(gender == "female") %>% 
+  select(year_of_birth, ethnicity, rank) %>% 
+  arrange(year_of_birth,ethnicity)
+
+Olivia_df
+```
+
+
+Produce a similar table showing the most popular name among male children.
+```{r}
+pop_male_names = 
+  filter(pop_baby_names, gender == "male", rank == "1") %>%
+  select(year_of_birth, ethnicity, childs_first_name) %>% 
+  arrange(year_of_birth, ethnicity) %>% 
+  rename(most_pop_male_name = childs_first_name)
+
+pop_male_names
+```
+
+At last, for male, white non-hispanic children born in 2016, produce a scatter plot showing the number of children with a name (y axis) against the rank in popularity of that name (x axis).
 
 ```{r}
+scatter_df =  
+  filter(pop_baby_names, year_of_birth == "2016", gender == "male", ethnicity == "white_non_hisp") 
 
+df_plot = ggplot(scatter_df, aes(x = rank, y = count)) + 
+  geom_point(color = 'red') + 
+  labs(title = "Number of children with the names vs Rank of Popularity of Names for White Non-hispanic male Children Born in 2016",
+       x = "rank",
+       y = "number")
+
+df_plot
 ```
 
